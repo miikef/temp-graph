@@ -1,12 +1,13 @@
 var app = require('http').createServer(handler)
 var io = require('socket.io')(app);
 var fs = require('fs');
+var queries = require('./queries');
 
 
 var url = 'mongodb://localhost:27017/tempstat';
 var MongoClient = require('mongodb').MongoClient, assert = require('assert');
 connectDB();
-app.listen(1337);
+app.listen(1338);
 
 
 // Use connect method to connect to the server
@@ -20,7 +21,7 @@ function connectDB() {
 
 	});
 }
-         
+
 function handler(req, res) {
     fs.readFile(__dirname + '/index.html',
         function(err, data) {
@@ -53,19 +54,19 @@ io.on('connection', function(socket) {
 */
 
 function getCurrent( db ) {
-	
+
 }
 
-socket.on('current', function(data) {
+io.on('current', function(data) {
     var options = {
         "limit": 1,
 	"sort": "date"
     }
 
-    collection.find({location='Kallare'}, options).toArray( function(err, docs) {
+    collection.find({location:'Kallare'}, options).toArray( function(err, docs) {
         assert.equal(err, null);
 	    docs.length
-	    collection.find({location='Kallare'}, options).toArray( function(err, docs) {
+	    collection.find({location:'Kallare'}, options).toArray( function(err, docs) {
         	assert.equal(err, null);
 	    	socket.emit('current', docs );
      	});
