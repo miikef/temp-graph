@@ -2,24 +2,27 @@ var app = require('http').createServer(handler)
 var io = require('socket.io')(app);
 var fs = require('fs');
 var queries = require('./queries');
+var queryHandler;
 
-
-var url = 'mongodb://localhost:27017/tempstat';
+var url = 'mongodb://192.168.1.10:27017/tempstat';
 var MongoClient = require('mongodb').MongoClient, assert = require('assert');
-connectDB();
+setup();
 app.listen(1338);
 
-
-// Use connect method to connect to the server
-function connectDB() {
+function setup() {
 	MongoClient.connect(url, function(err, db) {
 	    assert.equal(null, err);
-	    global.db = db;
-
-	    console.log(db)
 	    console.log("Connected successfully to mongodb server");
+        queryHandler = new queries(db);
 
+
+        _test();
 	});
+}
+
+function _test() {
+    queryHandler.doQuery(1479758700,1479845100,'Kallare');
+    //queryHandler._test(1479758700,1479845100,'Kallare');
 }
 
 function handler(req, res) {
