@@ -1,4 +1,5 @@
-var socket = io('http://192.168.1.10:1337');
-socket.on('update', function(data) {
-    console.log("update");
+console.log("Opening socket");
+var socket = io('http://127.0.0.1:9595');
+socket.on('data', function(data) {
+    console.log(data);
 });

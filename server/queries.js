@@ -1,7 +1,7 @@
 //{'date': 1479755143, 'rh': 90.8, 'location': 'Trossbotten', 'temp': 8.01}
 // bs = require('binarysearch');
 
-const MAX_RESULTS = 100;
+const MAX_RESULTS = 200;
 
 const MINUTE = 60;
 const HOUR = 60 * MINUTE;
@@ -20,12 +20,12 @@ Queries = function(db) {
 Queries.prototype = {
     db: null,
 
-    doQuery: function(from, to, location) {
+    doQuery: function(from, to, location, callBack) {
         const intervalLength = this._getIntervalLength(from, to);
         const intervals = this._getIntervals(from, to, intervalLength);
         const scope = {
             intervals: intervals,
-            intervalLength: intervalLength
+            intervalLength: intervalLength,
         };
         var collection = this.db.collection('measurements');
         collection.mapReduce(
@@ -47,10 +47,10 @@ Queries.prototype = {
                 scope: scope
             },
             function(err, results) {
-                console.log("----------- 0")
-                console.dir(err)
-                console.dir(results)
-                    // logger.log(results);
+                console.log("----------- 0");
+                console.dir(err);
+                console.dir(results);
+                callBack(err, results);
             }
         );
     },
@@ -81,17 +81,24 @@ Queries.prototype = {
     },
 
     _reduce: function(key, values) {
-        var total = 0;
-        var noOfValues = values.length;
+        var totalTemp = totalRH =  0;
+        var noOfTempValues = noOfRHValues = values.length;
         for (var i = 0; i < values.length; i++) {
             if( values[i].temp ) {
-                total += values[i].rh;
+                totalTemp += values[i].temp;
             }
             else {
-                noOfValues--;
+                noOfTempValues--;
             }
+            if( values[i].rh ) {
+                totalRH += values[i].rh;
+            }
+            else {
+                noOfRHValues--;
+            }
+
         }
-        return total / noOfValues;
+        return { temp: Math.round((10 * totalTemp) / noOfTempValues)/10, rh: Math.round(totalRH / noOfRHValues) };
     },
 
     _getIntervals: function(start, end, interval) {
@@ -112,6 +119,6 @@ Queries.prototype = {
             }
         }
         return INTERVALS[INTERVALS.length - 1];
-    }
+    },
 }
 module.exports = Queries;

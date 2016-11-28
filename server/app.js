@@ -7,7 +7,7 @@ var queryHandler;
 var url = 'mongodb://192.168.1.10:27017/tempstat';
 var MongoClient = require('mongodb').MongoClient, assert = require('assert');
 setup();
-app.listen(1338);
+app.listen(9595);
 
 function setup() {
 	MongoClient.connect(url, function(err, db) {
@@ -16,12 +16,12 @@ function setup() {
         queryHandler = new queries(db);
 
 
-        _test();
+        //_test();
 	});
 }
 
 function _test() {
-    queryHandler.doQuery(1479758700,1479845100,'Kallare');
+    // queryHandler.doQuery(1479758700,1479845100,'Kallare');
     //queryHandler._test(1479758700,1479845100,'Kallare');
 }
 
@@ -37,24 +37,19 @@ function handler(req, res) {
             res.end(data);
         });
 }
-/*
+
 io.on('connection', function(socket) {
-    console.log("Connection");
-    //connectDB();
-    var collection = db.collection('measurements');
-    console.log(collection);
-    // Find some documents
-    var options = {
-          "limit": 1,
-	  "sort": "date"
-    }
-    collection.find({location='Kallare'}, options).toArray( function(err, docs) {
-        assert.equal(err, null);
-        console.log("Found the following records");
-        console.log(docs)
-	socket.emit('current', docs );
+    var now = Math.ceil((new Date().getTime())/1000);
+    var start = now - 60*60*24*7;
+    queryHandler.doQuery(start, now,'Kallare',function(err,data){
+        if ( err ) {
+            console.log( "Error in query: " + err );
+            return;
+        }
+        socket.emit('data', data );
     });
-*/
+});
+
 
 function getCurrent( db ) {
 
