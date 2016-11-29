@@ -1,4 +1,13 @@
-/* tell the SVG path to be a thin blue line without any area fill */
+.axis--x path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+/*
 path {
     stroke-width: 1;
     fill: none;
@@ -48,3 +57,4 @@ path {
 .y.axisLeft text {
     fill: steelblue;
 }
+*/
