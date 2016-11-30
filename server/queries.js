@@ -1,5 +1,6 @@
 //{'date': 1479755143, 'rh': 90.8, 'location': 'Trossbotten', 'temp': 8.01}
 // bs = require('binarysearch');
+var when = require('when');
 
 const MAX_RESULTS = 200;
 
@@ -28,31 +29,37 @@ Queries.prototype = {
             intervalLength: intervalLength,
         };
         var collection = this.db.collection('measurements');
-        collection.mapReduce(
-            this._map,
-            this._reduce, {
-                query: {
-                    'date': {
-                        $gte: from,
-                        $lt: to
+        var that = this;
+        var promise = when.promise(
+            function(resolve, reject, notify) {
+                collection.mapReduce(
+                    that._map,
+                    that._reduce, {
+                        query: {
+                            'date': {
+                                $gte: from,
+                                $lt: to
+                            },
+                            location: location
+                        },
+                        // sort: {'count': -1},
+                        // limit: 1000,
+                        verbose: true,
+                        out: {
+                            inline: 1
+                        },
+                        scope: scope
                     },
-                    location: location
-                },
-                // sort: {'count': -1},
-                // limit: 1000,
-                verbose: true,
-                out: {
-                    inline: 1
-                },
-                scope: scope
-            },
-            function(err, results) {
-                console.log("----------- 0");
-                console.dir(err);
-                console.dir(results);
-                callBack(err, results);
-            }
-        );
+                    function(err, results) {
+                        if (err) {
+                            reject(err);
+                        }
+                        resolve(results);
+                    }
+                );
+
+            });
+        return promise;
     },
 
     /*
@@ -81,24 +88,25 @@ Queries.prototype = {
     },
 
     _reduce: function(key, values) {
-        var totalTemp = totalRH =  0;
+        var totalTemp = totalRH = 0;
         var noOfTempValues = noOfRHValues = values.length;
         for (var i = 0; i < values.length; i++) {
-            if( values[i].temp ) {
+            if (values[i].temp) {
                 totalTemp += values[i].temp;
-            }
-            else {
+            } else {
                 noOfTempValues--;
             }
-            if( values[i].rh ) {
+            if (values[i].rh) {
                 totalRH += values[i].rh;
-            }
-            else {
+            } else {
                 noOfRHValues--;
             }
 
         }
-        return { temp: Math.round((10 * totalTemp) / noOfTempValues)/10, rh: Math.round(totalRH / noOfRHValues) };
+        return {
+            temp: Math.round((10 * totalTemp) / noOfTempValues) / 10,
+            rh: Math.round(totalRH / noOfRHValues)
+        };
     },
 
     _getIntervals: function(start, end, interval) {
