@@ -1,3 +1,18 @@
+/* General */
+body {
+    background-color: black;
+    color: grey;
+    font-family: sans-serif;
+    font-size: 0.8em;
+}
+
+h2 {
+    margin-left: 1em;
+}
+
+/* TempRHGraph */
+
+
 .axis--x path {
   display: none;
 }
@@ -5,56 +20,36 @@
 .line {
   fill: none;
   stroke: steelblue;
+  stroke-width: 1px;
+}
+
+.line.rh {
+  stroke: orange;
   stroke-width: 1.5px;
-}
-/*
-path {
-    stroke-width: 1;
-    fill: none;
-}
-
-.data1 {
-    stroke: steelblue;
-}
-
-.data2 {
-    stroke: orange;
 }
 
 .axis {
+    stroke: white;
+    stroke-width: 1px;
     shape-rendering: crispEdges;
 }
 
-.x.axis line {
-    stroke: lightgrey;
+.axis .domain {
+    stroke: white;
 }
 
-.x.axis .minor {
-    stroke-opacity: .5;
+.axis line {
+    stroke: white;
 }
 
-.x.axis path {
-    display: none;
+.axis text.label {
+    font-size: 1.1em;
 }
 
-.x.axis text {
-    font-size: 14;
+.axis-rh text.label {
+    stroke: orange;
 }
 
-.y.axis line, .y.axis path {
-    fill: none;
-    stroke: #000;
+.axis-temp text.label {
+    stroke: steelblue;
 }
-
-.y.axis text {
-    font-size: 14;
-}
-
-.y.axisRight text {
-    fill: orange;
-}
-
-.y.axisLeft text {
-    fill: steelblue;
-}
-*/

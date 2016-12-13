@@ -1,4 +1,4 @@
-View = function(selector) {
+TempRhGraph = function(selector) {
     var that = this;
     this.svg = d3.select(selector),
         margin = {
@@ -12,7 +12,7 @@ View = function(selector) {
         that.g = this.svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 };
 
-View.prototype = {
+TempRhGraph.prototype = {
     draw: function(data) {
         var parseTime = d3.timeParse("%d-%b-%y");
         var x = d3.scaleTime()
@@ -57,7 +57,7 @@ View.prototype = {
             .attr("class", "axis axis--y axis-temp")
             .call(d3.axisLeft(y1))
             .append("text")
-            .attr("fill", "#000")
+            .attr("class", "label")
             .attr("transform", "rotate(-90)")
             .attr("y", 6)
             .attr("dy", "0.71em")
@@ -69,7 +69,7 @@ View.prototype = {
             .attr("transform", "translate(" + width + " ,0)")
             .call(d3.axisRight(y2))
             .append("text")
-            .attr("fill", "#000")
+            .attr("class", "label")
             .attr("transform", "rotate(-90)")
             .attr("y", -12)
             .attr("dy", "0.71em")
