@@ -2,12 +2,17 @@ var app = require('http').createServer(handler);
 var io = require('socket.io')(app);
 var fs = require('fs');
 var when = require('when');
+var serveStatic = require('serve-static');
 var queries = require('./queries');
 var queryHandler;
 
 var url = 'mongodb://192.168.1.10:27017/tempstat';
 var MongoClient = require('mongodb').MongoClient,
     assert = require('assert');
+var serve = serveStatic( __dirname + '/client', {
+    fallthrough: false
+});
+
 setup();
 app.listen(9595);
 
@@ -29,16 +34,7 @@ function _test() {
 */
 
 function handler(req, res) {
-    fs.readFile(__dirname + '/index.html',
-        function(err, data) {
-            if (err) {
-                res.writeHead(500);
-                return res.end('Error loading index.html');
-            }
-
-            res.writeHead(200);
-            res.end(data);
-        });
+    serve(req, res, function(){});
 }
 
 
