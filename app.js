@@ -4,14 +4,17 @@ var fs = require('fs');
 var when = require('when');
 var serveStatic = require('serve-static');
 var queries = require('./queries');
+var constants = require('./constants');
 var queryHandler;
 
-var url = 'mongodb://192.168.1.10:27017/tempstat';
+const url = 'mongodb://192.168.1.10:27017/tempstat';
 var MongoClient = require('mongodb').MongoClient,
     assert = require('assert');
-var serve = serveStatic( __dirname + '/client', {
+var serve = serveStatic(__dirname + '/client', {
     fallthrough: false
 });
+
+const locations = ['Kallare', 'Trossbotten'];
 
 setup();
 app.listen(9595);
@@ -21,30 +24,39 @@ function setup() {
         assert.equal(null, err);
         console.log("Connected successfully to mongodb server");
         queryHandler = new queries(db);
-
-
-        //_test();
     });
 }
-/*
-function _test() {
-    // queryHandler.doQuery(1479758700,1479845100,'Kallare');
-    //queryHandler._test(1479758700,1479845100,'Kallare');
-}
-*/
 
 function handler(req, res) {
-    serve(req, res, function(){});
+    serve(req, res, function() {});
 }
 
 
 io.on('connection', function(socket) {
-    var now = Math.ceil((new Date().getTime()) / 1000);
-    var start = now - 60 * 60 * 24 * 7;
-    var promises = [];
+    console.log("Client connected");
+    socket.on('getData', getData.bind(this, socket));
+});
 
-    promises.push(queryHandler.doQuery(start, now, 'Kallare'));
-    promises.push(queryHandler.doQuery(start, now, 'Trossbotten'));
+function getData(socket, start, end, where) {
+
+    if (!where) {
+        where = locations;
+    }
+    if (!Array.isArray(where)) {
+        where = [where];
+    }
+    if (!end) {
+        end = Math.ceil((new Date().getTime()) / 1000);
+    }
+    if (!start) {
+        start = end - constants.WEEK;
+    }
+    console.log('getData(' + 'start=' + start + ', end=' + end);
+    var promises = [];
+    where.forEach(function(location) {
+        promises.push(queryHandler.doQuery(start, end, location));
+
+    });
     when.all(promises).then(
         function(data) {
             socket.emit('data', data);
@@ -52,27 +64,4 @@ io.on('connection', function(socket) {
         function(error) {
             console.log(error);
         });
-});
-
-/*
-function getCurrent( db ) {
-
 }
-
-io.on('current', function(data) {
-    var options = {
-        "limit": 1,
-	"sort": "date"
-    }
-
-    collection.find({location:'Kallare'}, options).toArray( function(err, docsk) {
-        assert.equal(err, null);
-	    collection.find({location:'Trossbotten'}, options).toArray( function(err, docst) {
-        	assert.equal(err, null);
-	        socket.emit('current', [docsk,docst] );
-     	});
-    });
-});
-
-//});
-*/

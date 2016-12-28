@@ -1,17 +1,10 @@
 //{'date': 1479755143, 'rh': 90.8, 'location': 'Trossbotten', 'temp': 8.01}
 // bs = require('binarysearch');
 var when = require('when');
+var constants = require('./constants');
 
 const MAX_RESULTS = 200;
-
-const MINUTE = 60;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
-const WEEK = 7 * DAY;
-const YEAR = DAY * 365;
-const AVERAGE_MONTH = YEAR / 12;
-
-const INTERVALS = [MINUTE, HOUR, DAY, WEEK, AVERAGE_MONTH, YEAR];
+const INTERVALS = [constants.MINUTE, constants.HOUR, constants.DAY, constants.WEEK, constants.AVERAGE_MONTH, constants.YEAR];
 
 
 Queries = function(db) {
@@ -20,6 +13,7 @@ Queries = function(db) {
 
 Queries.prototype = {
     db: null,
+
 
     doQuery: function(from, to, location, callBack) {
         const intervalLength = this._getIntervalLength(from, to);
