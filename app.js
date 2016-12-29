@@ -4,7 +4,7 @@ var fs = require('fs');
 var when = require('when');
 var serveStatic = require('serve-static');
 var queries = require('./queries');
-var constants = require('./constants');
+var constants = require('./client/constants');
 var queryHandler;
 
 const url = 'mongodb://192.168.1.10:27017/tempstat';
@@ -37,8 +37,7 @@ io.on('connection', function(socket) {
     socket.on('getData', getData.bind(this, socket));
 });
 
-function getData(socket, start, end, where) {
-
+function getData(socket, start, end, where, fn) {
     if (!where) {
         where = locations;
     }
@@ -48,9 +47,7 @@ function getData(socket, start, end, where) {
     if (!end) {
         end = Math.ceil((new Date().getTime()) / 1000);
     }
-    if (!start) {
-        start = end - constants.WEEK;
-    }
+
     console.log('getData(' + 'start=' + start + ', end=' + end);
     var promises = [];
     where.forEach(function(location) {
@@ -59,9 +56,11 @@ function getData(socket, start, end, where) {
     });
     when.all(promises).then(
         function(data) {
-            socket.emit('data', data);
+            //socket.emit('data', data);
+            fn(data);
         },
         function(error) {
             console.log(error);
+            fn();
         });
 }

@@ -1,7 +1,5 @@
-//{'date': 1479755143, 'rh': 90.8, 'location': 'Trossbotten', 'temp': 8.01}
-// bs = require('binarysearch');
 var when = require('when');
-var constants = require('./constants');
+var constants = require('./client/constants');
 
 const MAX_RESULTS = 200;
 const INTERVALS = [constants.MINUTE, constants.HOUR, constants.DAY, constants.WEEK, constants.AVERAGE_MONTH, constants.YEAR];
@@ -9,24 +7,44 @@ const INTERVALS = [constants.MINUTE, constants.HOUR, constants.DAY, constants.WE
 
 Queries = function(db) {
     this.db = db;
+    this.collection = this.db.collection('measurements');
+    var that = this;
+
+    // Find the minimum date in the db to clamp queries to
+    // Doesn't matter in practice if this is finished before other queries are run
+    this.collection.find({
+        query: {},
+        sort: {
+            'date': -1
+        },
+    }).limit(1).toArray(
+        function(err, results) {
+            if (err || !results.length) {
+                console.log("Queries: Could not find minimum date");
+            }
+            that.minDate = results[0].date;
+        });
 };
 
 Queries.prototype = {
     db: null,
+    minDate: 0,
+    collection: '',
 
 
     doQuery: function(from, to, location, callBack) {
-        const intervalLength = this._getIntervalLength(from, to);
+        from = (from < this.minDate) ? this.minDate : from;
+        //const intervalLength = this._getIntervalLength(from, to);
+        const intervalLength = (to - from) / MAX_RESULTS
+
         const intervals = this._getIntervals(from, to, intervalLength);
         const scope = {
-            intervals: intervals,
-            intervalLength: intervalLength,
+            intervals: intervals
         };
-        var collection = this.db.collection('measurements');
         var that = this;
         var promise = when.promise(
             function(resolve, reject, notify) {
-                collection.mapReduce(
+                that.collection.mapReduce(
                     that._map,
                     that._reduce, {
                         query: {
@@ -36,9 +54,7 @@ Queries.prototype = {
                             },
                             location: location
                         },
-                        // sort: {'count': -1},
-                        // limit: 1000,
-                        verbose: true,
+                        //sort: {'date': -1},
                         out: {
                             inline: 1
                         },
@@ -67,31 +83,47 @@ Queries.prototype = {
             });
         },
     */
+
     _map: function() {
-        // var partOfInterval = bs.closest(intervals,this.date);
-        // FIXME: Should use binary search, cannot get lib to work
-        for (var i = 0; i < intervals.length; i++) {
-            if (Math.abs(this.date - intervals[i]) <= (intervalLength / 2)) {
-                emit(intervals[i], {
-                    temp: this.temp,
-                    rh: this.rh
-                });
+        var currentIndex = minIndex = 0;
+        var maxIndex = intervals.length - 1;
+        var best = minIndex;
+
+        while (maxIndex >= minIndex) {
+            currentIndex = (minIndex + maxIndex) / 2 | 0;
+            currentElement = intervals[currentIndex];
+
+            if (currentElement < this.date) {
+                minIndex = currentIndex + 1;
+            } else if (currentElement > this.date) {
+                maxIndex = currentIndex - 1;
+            } else {
+                best = currentIndex;
                 break;
             }
+
+            if (Math.abs(currentElement - this.date) < Math.abs(intervals[best] - this.date)) {
+                best = currentIndex;
+            }
         }
+        emit(intervals[best], {
+            temp: this.temp,
+            rh: this.rh
+        });
     },
 
     _reduce: function(key, values) {
         var totalTemp = totalRH = 0;
         var noOfTempValues = noOfRHValues = values.length;
-        for (var i = 0; i < values.length; i++) {
-            if (values[i].temp) {
-                totalTemp += values[i].temp;
+        for (var i = 0, len = values.length; i < len; i++) {
+            var obj = values[i];
+            if (obj.temp) {
+                totalTemp += obj.temp;
             } else {
                 noOfTempValues--;
             }
-            if (values[i].rh) {
-                totalRH += values[i].rh;
+            if (obj.rh) {
+                totalRH += obj.rh;
             } else {
                 noOfRHValues--;
             }
@@ -113,6 +145,7 @@ Queries.prototype = {
         return intervals;
     },
 
+    //Not used
     _getIntervalLength: function(start, end) {
         var maxIntervalLength = (end - start) / MAX_RESULTS;
         for (var i = 0; i < INTERVALS.length; i++) {
