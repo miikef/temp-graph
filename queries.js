@@ -39,7 +39,8 @@ Queries.prototype = {
 
         const intervals = this._getIntervals(from, to, intervalLength);
         const scope = {
-            intervals: intervals
+            intervals: intervals,
+            intervalLength: intervalLength
         };
         var that = this;
         var promise = when.promise(
@@ -85,28 +86,9 @@ Queries.prototype = {
     */
 
     _map: function() {
-        var currentIndex = minIndex = 0;
-        var maxIndex = intervals.length - 1;
-        var best = minIndex;
-
-        while (maxIndex >= minIndex) {
-            currentIndex = (minIndex + maxIndex) / 2 | 0;
-            currentElement = intervals[currentIndex];
-
-            if (currentElement < this.date) {
-                minIndex = currentIndex + 1;
-            } else if (currentElement > this.date) {
-                maxIndex = currentIndex - 1;
-            } else {
-                best = currentIndex;
-                break;
-            }
-
-            if (Math.abs(currentElement - this.date) < Math.abs(intervals[best] - this.date)) {
-                best = currentIndex;
-            }
-        }
-        emit(intervals[best], {
+        var min = intervals[0];
+        var interval = Math.round((this.date - min) / intervalLength);
+        emit(intervals[interval], {
             temp: this.temp,
             rh: this.rh
         });

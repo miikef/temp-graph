@@ -6,12 +6,11 @@ body {
     font-size: 0.8em;
 }
 
-h2 {
-    margin-left: 1em;
+h2, .rangeselect {
+    margin-left: 20px;
 }
 
 /* TempRHGraph */
-
 
 .axis--x path {
   display: none;
