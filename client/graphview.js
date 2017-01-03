@@ -1,33 +1,57 @@
-GraphView = function(elementId, name) {
-    this.element = document.getElementById(elementId);
-    this.name = name;
+GraphView = function(elementId, location, socket) {
+    this.element = $('#' + elementId);
+    this.location = location;
+    this.socket = socket;
     this.init();
 };
 
 GraphView.prototype = {
     element: null,
-    name: null,
+    location: null,
     graph: null,
+    socket: null,
 
     init: function() {
-        if (!this.element) {
-            console.log("GraphView: no element")
-        }
-        this.element.innerHTML = this.html(this.name, this.element.id);
-        this.graph = new TempRhGraph('#' + this.element.id + ' .graph');
+        this.element.html(this.html(this.location.name, this.element.attr('id')));
+        this.graph = new TempRhGraph(this.element.selector + ' .graph');
+        this.addButton(WEEK, 'Week').trigger('click');
+        this.addButton(AVERAGE_MONTH, 'Month');
+        this.addButton(YEAR, 'Year');
     },
 
-    setGraphData(data) {
+    addButton: function(range, name) {
+        let elem = $('<span class="button">' + name + '</span>').appendTo('#rangeselect_' + this.element.attr('id'));
+        var that = this;
+        elem.on('click', function() {
+            $(that.element.selector + ' .button').removeClass('selected');
+            elem.addClass('selected');
+            that.selectRange.call(that, range);
+        });
+        return elem;
+    },
+
+    selectRange: function(range) {
+        var end = Math.ceil((new Date().getTime()) / 1000);
+        this.loadData(end - range, end);
+    },
+
+    loadData: function(start, end) {
+        this.graph.clear();
+        var that = this;
+        this.element.addClass('loading');
+        socket.emit('getData', start, end, this.location.id, function(data) {
+            that.setGraphData(data[0]);
+            that.element.removeClass('loading');
+        });
+    },
+
+    setGraphData: function(data) {
         this.graph.draw(data);
     },
 
     html: (name, id) => {
         return `<h2>${name}</h2>
-                <div id="rangeselect_${id}" class="rangeselect">
-                    <span id="week" class="button">Week</span>
-                    <span id="month" class="button">Month</span>
-                    <span id="year" class="button">Year</span>
-                </div>
+                <div id="rangeselect_${id}" class="rangeselect"></div>
                 <svg class="graph" width="960" height="500"></svg>`
     }
 };

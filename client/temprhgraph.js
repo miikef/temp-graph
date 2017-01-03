@@ -98,6 +98,6 @@ TempRhGraph.prototype = {
     },
 
     clear: function() {
-        this.svg.selectAll("*").remove();
+        this.g.selectAll("*").remove();
     }
 }

@@ -10,6 +10,24 @@ h2, .rangeselect {
     margin-left: 20px;
 }
 
+.button {
+    cursor:pointer;
+    margin-right: 1em;
+}
+
+.button.selected {
+    color: orange;
+}
+
+.graphview {
+    clear: both;
+    float: left;
+}
+
+.graphview.loading {
+    background: transparent url('/img/ring.svg') no-repeat center center;
+}
+
 /* TempRHGraph */
 
 .axis--x path {
