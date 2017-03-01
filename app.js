@@ -35,15 +35,11 @@ function handler(req, res) {
 io.on('connection', function(socket) {
     console.log("Client connected");
     socket.on('getData', getData.bind(this, socket));
+    socket.on('getLatest', getLatest.bind(this, socket));
 });
 
 function getData(socket, start, end, where, fn) {
-    if (!where) {
-        where = locations;
-    }
-    if (!Array.isArray(where)) {
-        where = [where];
-    }
+    where = _getWhere(where);
     if (!end) {
         end = Math.ceil((new Date().getTime()) / 1000);
     }
@@ -52,15 +48,49 @@ function getData(socket, start, end, where, fn) {
     var promises = [];
     where.forEach(function(location) {
         promises.push(queryHandler.doQuery(start, end, location));
-
     });
     when.all(promises).then(
         function(data) {
-            //socket.emit('data', data);
-            fn(data);
+            fn({
+                data: data,
+                start: start,
+                end: end,
+                location: where
+            });
         },
         function(error) {
             console.log(error);
             fn();
         });
+}
+
+function getLatest(socket, where, fn) {
+    console.log("getLatest");
+    where = _getWhere(where);
+    var promises = [];
+    where.forEach(function(location) {
+        promises.push(queryHandler.latest(location));
+    });
+    when.all(promises).then(
+        function(data, location) {
+            fn({
+                rh: data[0].rh,
+                temp: data[0].temp,
+                date: data[0].date,
+            });
+        },
+        function(error) {
+            console.log(error);
+            fn();
+        });
+}
+
+function _getWhere(where) {
+    if (!where) {
+        where = locations;
+    }
+    if (!Array.isArray(where)) {
+        where = [where];
+    }
+    return where;
 }

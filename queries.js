@@ -32,7 +32,7 @@ Queries.prototype = {
     collection: '',
 
 
-    doQuery: function(from, to, location, callBack) {
+    doQuery: function(from, to, location) {
         from = (from < this.minDate) ? this.minDate : from;
         //const intervalLength = this._getIntervalLength(from, to);
         const intervalLength = (to - from) / MAX_RESULTS
@@ -66,6 +66,27 @@ Queries.prototype = {
                             reject(err);
                         }
                         resolve(results);
+                    }
+                );
+
+            });
+        return promise;
+    },
+
+    latest: function(location) {
+        var that = this;
+        var promise = when.promise(
+            function(resolve, reject, notify) {
+                that.collection.find({
+                    location: location
+                }).sort({
+                    'date': -1
+                }).limit(1).toArray(
+                    function(err, results) {
+                        if (err) {
+                            reject(err);
+                        }
+                        resolve(results[0]);
                     }
                 );
 
