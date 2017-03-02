@@ -23,8 +23,13 @@ Latest.prototype = {
                 that.element.find('.datetime').addClass('olddata');
             }
             that.element.find('.datetime').html(that.timeSince(data.date * 1000) + ' ago');
-            that.element.find('.rh').html(that.toDecimals(data.rh, 1) + '%');
-            that.element.find('.temp').html(that.toDecimals(data.temp, 2) + '&deg;C');
+            if (data.rh) {
+                that.element.find('.rh').html(that.toDecimals(data.rh, 1) + '%');
+                that.element.find('.rh').css('color', that.getColor(data.rh));
+            }
+            if (data.temp) {
+                that.element.find('.temp').html(that.toDecimals(data.temp, 2) + '&deg;C');
+            }
         });
     },
 
@@ -67,5 +72,15 @@ Latest.prototype = {
             return interval + " minutes";
         }
         return Math.floor(seconds) + " seconds";
+    },
+
+    getColor: function(percent) {
+        percent = (percent / 100 - 0.5)
+        if (percent < 0) {
+            percent = 0;
+        }
+        percent = percent / 0.5
+        var hue = ((1 - percent) * 120).toString(10);
+        return ["hsl(", hue, ",100%,50%)"].join("");
     }
 };

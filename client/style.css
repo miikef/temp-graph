@@ -36,6 +36,20 @@ h2, .rangeselect {
     color: red;
 }
 
+.latestcontainer {
+    height: 0;
+}
+
+.latest {
+    position: relative;
+    border: 1px solid grey;
+    left: 74px;
+    padding: 0.3em;
+    top: 20px;
+    display: inline-block;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
 
 /* TempRHGraph */
 
