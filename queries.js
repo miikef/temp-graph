@@ -1,7 +1,7 @@
 var when = require('when');
 var constants = require('./client/constants');
 
-const MAX_RESULTS = 200;
+const MAX_RESULTS = 300;
 const INTERVALS = [constants.MINUTE, constants.HOUR, constants.DAY, constants.WEEK, constants.AVERAGE_MONTH, constants.YEAR];
 
 
@@ -134,7 +134,7 @@ Queries.prototype = {
         }
         return {
             temp: Math.round((10 * totalTemp) / noOfTempValues) / 10,
-            rh: Math.round(totalRH / noOfRHValues)
+            rh: Math.round((10 * totalRH) / noOfRHValues) / 10
         };
     },
 

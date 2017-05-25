@@ -9,20 +9,22 @@ Latest.prototype = {
     element: null,
     location: null,
     socket: null,
+    dataTimer: undefined,
+    timeTimer: undefined,
 
     init: function() {
         this.element.html(this.html());
         this.loadData();
+        this.timeTimer = setInterval(this.setTime.bind(this), 1000);
     },
 
 
     loadData: function() {
         var that = this;
+        this.dataTime = undefined;
         socket.emit('getLatest', this.locationId, function(data) {
-            if (((new Date() - data.date * 1000) / 1000) > HOUR) {
-                that.element.find('.datetime').addClass('olddata');
-            }
-            that.element.find('.datetime').html(that.timeSince(data.date * 1000) + ' ago');
+            that.dataTime = data.date;
+            that.setTime.call(that);
             if (data.rh) {
                 that.element.find('.rh').html(that.toDecimals(data.rh, 1) + '%');
                 that.element.find('.rh').css('color', that.getColor(data.rh));
@@ -30,7 +32,28 @@ Latest.prototype = {
             if (data.temp) {
                 that.element.find('.temp').html(that.toDecimals(data.temp, 2) + '&deg;C');
             }
+            var now = new Date();
+            var nextLoad = 10000 * MINUTE + 5000 - (now - (that.dataTime * 1000));
+            if (nextLoad < 1000 * MINUTE) {
+                nextLoad = 1000 * MINUTE
+            }
+            clearTimeout(that.dataTimer);
+            that.dataTimer = setTimeout(that.loadData.bind(that), nextLoad);
         });
+    },
+
+    setTime: function() {
+        if (!this.dataTime) {
+            this.element.find('.datetime').hide();
+            return;
+        }
+        this.element.find('.datetime').show();
+        if (((new Date() - this.dataTime * 1000) / 1000) > HOUR) {
+            this.element.find('.datetime').addClass('olddata');
+        } else {
+            this.element.find('.datetime').removeClass('olddata');
+        }
+        this.element.find('.datetime').html(this.timeSince(this.dataTime * 1000) + ' ago');
     },
 
     html: () => {

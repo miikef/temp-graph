@@ -12,7 +12,7 @@ GraphView.prototype = {
     socket: null,
 
     init: function() {
-        this.element.html(this.html(this.location.name, this.element.attr('id')));
+        this.element.html(this.html(this.location.name, this.element.attr('id'), this.getBrowserWidth() - 50));
         this.graph = new TempRhGraph(this.element.selector + ' .graph');
         let latest = new Latest(this.element.attr('id') + ' .latestcontainer', this.location.id, socket);
         this.addButton(WEEK, 'Week').trigger('click');
@@ -51,10 +51,24 @@ GraphView.prototype = {
         this.graph.draw(data);
     },
 
-    html: (name, id) => {
+    html: (name, id, width) => {
         return `<h2>${name}</h2>
                 <div id="rangeselect_${id}" class="rangeselect"></div>
                 <div class="latestcontainer"></div>
-                <svg class="graph" width="960" height="500"></svg>`
+                <svg class="graph" width="${width}" height="500"></svg>`
+    },
+
+    getBrowserWidth: function() {
+        if (self.innerWidth) {
+            return self.innerWidth;
+        }
+
+        if (document.documentElement && document.documentElement.clientWidth) {
+            return document.documentElement.clientWidth;
+        }
+
+        if (document.body) {
+            return document.body.clientWidth;
+        }
     }
 };
