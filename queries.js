@@ -77,9 +77,13 @@ Queries.prototype = {
         var that = this;
         var promise = when.promise(
             function(resolve, reject, notify) {
-                that.collection.find({
-                    location: location
-                }).sort({
+                var locationArg = {};
+                if (location) {
+                    locationArg = {
+                        location: location
+                    };
+                }
+                that.collection.find(locationArg).sort({
                     'date': -1
                 }).limit(1).toArray(
                     function(err, results) {

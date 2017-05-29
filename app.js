@@ -6,6 +6,8 @@ var serveStatic = require('serve-static');
 var queries = require('./queries');
 var constants = require('./client/constants');
 var queryHandler;
+var latestTimeStamp = 0;
+var newDataTimer = null;
 
 const url = 'mongodb://192.168.1.10:27017/tempstat';
 var MongoClient = require('mongodb').MongoClient,
@@ -22,8 +24,9 @@ app.listen(9595);
 function setup() {
     MongoClient.connect(url, function(err, db) {
         assert.equal(null, err);
-        console.log("Connected successfully to mongodb server");
+        console.log('Connected successfully to mongodb server');
         queryHandler = new queries(db);
+        newDataTimer = setTimeout(checkForNewData, 60000);
     });
 }
 
@@ -31,6 +34,37 @@ function handler(req, res) {
     serve(req, res, function() {});
 }
 
+function checkForNewData(timeStamp, socket) {
+    if (timeStamp) {
+        if (timeStamp <= latestTimeStamp) {
+            return;
+        }
+        latestTimeStamp = timeStamp;
+        emitNewData(socket);
+    } else {
+        queryHandler.latest().then(
+            function(data) {
+                if (data.date > latestTimeStamp) {
+                    latestTimeStamp = data.date;
+                    emitNewData(socket);
+                }
+            }
+        )
+    }
+
+}
+
+function emitNewData(socket) {
+    if (socket) {
+        console.log("Emitting newData to everyone but client that triggered it");
+        socket.emit('newData', latestTimeStamp);
+    } else {
+        console.log("Emitting newData to everyone,");
+        io.emit('newData', latestTimeStamp);
+    }
+    clearTimeout(newDataTimer);
+    newDataTimer = setTimeout(checkForNewData, 60000);
+}
 
 io.on('connection', function(socket) {
     console.log("Client connected");
@@ -44,7 +78,6 @@ function getData(socket, start, end, where, fn) {
         end = Math.ceil((new Date().getTime()) / 1000);
     }
 
-    console.log('getData(' + 'start=' + start + ', end=' + end);
     var promises = [];
     where.forEach(function(location) {
         promises.push(queryHandler.doQuery(start, end, location));
@@ -65,7 +98,6 @@ function getData(socket, start, end, where, fn) {
 }
 
 function getLatest(socket, where, fn) {
-    console.log("getLatest");
     where = _getWhere(where);
     var promises = [];
     where.forEach(function(location) {
@@ -73,6 +105,8 @@ function getLatest(socket, where, fn) {
     });
     when.all(promises).then(
         function(data, location) {
+            // Check if timestamp is newer than what we've seen
+            checkForNewData(data[0].date, socket);
             fn({
                 rh: data[0].rh,
                 temp: data[0].temp,
