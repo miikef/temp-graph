@@ -1,4 +1,4 @@
-Latest = function(elementId, locationId, socket) {
+Latest = function(elementId, locationId) {
     this.element = $('#' + elementId);
     this.locationId = locationId;
     this.socket = socket;
@@ -8,7 +8,6 @@ Latest = function(elementId, locationId, socket) {
 Latest.prototype = {
     element: null,
     location: null,
-    socket: null,
     dataTimer: undefined,
     timeTimer: undefined,
 
@@ -32,6 +31,7 @@ Latest.prototype = {
             if (data.temp) {
                 that.element.find('.temp').html(that.toDecimals(data.temp, 2) + '&deg;C');
             }
+            // TODO: Use signal instead to refresh?
             var now = new Date();
             var nextLoad = 10000 * MINUTE + 5000 - (now - (that.dataTime * 1000));
             if (nextLoad < 1000 * MINUTE) {
@@ -78,19 +78,19 @@ Latest.prototype = {
         if (interval > 1) {
             return interval + " years";
         }
-        interval = Math.floor(seconds / 2592000);
+        interval = Math.floor(seconds / YEAR);
         if (interval > 1) {
             return interval + " months";
         }
-        interval = Math.floor(seconds / 86400);
+        interval = Math.floor(seconds / DAY);
         if (interval > 1) {
             return interval + " days";
         }
-        interval = Math.floor(seconds / 3600);
+        interval = Math.floor(seconds / HOUR);
         if (interval > 1) {
             return interval + " hours";
         }
-        interval = Math.floor(seconds / 60);
+        interval = Math.floor(seconds / MINUTE);
         if (interval > 1) {
             return interval + " minutes";
         }

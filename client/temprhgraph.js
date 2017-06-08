@@ -24,7 +24,17 @@ TempRhGraph.prototype = {
         shortMonths: ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
     },
 
+    data: null,
+
+    redraw: function() {
+        if(this.data) {
+            this.draw(this.data);
+        }
+    },
+
     draw: function(data) {
+        console.log("draw");
+        this.data = data;
         d3.timeFormatDefaultLocale(this.localeData);
         var x = d3.scaleTime()
             .rangeRound([0, width]);

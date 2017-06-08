@@ -1,7 +1,7 @@
 var when = require('when');
 var constants = require('./client/constants');
 
-const MAX_RESULTS = 300;
+const MAX_RESULTS = 400;
 const INTERVALS = [constants.MINUTE, constants.HOUR, constants.DAY, constants.WEEK, constants.AVERAGE_MONTH, constants.YEAR];
 
 
@@ -115,30 +115,41 @@ Queries.prototype = {
         var interval = Math.round((this.date - min) / intervalLength);
         emit(intervals[interval], {
             temp: this.temp,
-            rh: this.rh
+            rh: this.rh,
+            maxRH: this.rh,
+            maxTemp: this.temp,
         });
     },
 
     _reduce: function(key, values) {
         var totalTemp = totalRH = 0;
+        var maxRH = maxTemp = -1;
         var noOfTempValues = noOfRHValues = values.length;
         for (var i = 0, len = values.length; i < len; i++) {
             var obj = values[i];
             if (obj.temp) {
+                if (obj.temp > maxTemp) {
+                    maxTemp = obj.temp;
+                }
                 totalTemp += obj.temp;
             } else {
                 noOfTempValues--;
             }
             if (obj.rh) {
+                if (obj.rh > maxTemp) {
+                    maxTemp = obj.rh;
+                }
                 totalRH += obj.rh;
             } else {
                 noOfRHValues--;
             }
-
         }
         return {
             temp: Math.round((10 * totalTemp) / noOfTempValues) / 10,
-            rh: Math.round((10 * totalRH) / noOfRHValues) / 10
+            rh: Math.round((10 * totalRH) / noOfRHValues) / 10,
+            abc: 1,
+            maxRH: maxRH,
+            maxTemp: maxTemp
         };
     },
 

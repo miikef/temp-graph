@@ -1,7 +1,6 @@
-GraphView = function(elementId, location, socket) {
+GraphView = function(elementId, location) {
     this.element = $('#' + elementId);
     this.location = location;
-    this.socket = socket;
     this.init();
 };
 
@@ -9,15 +8,30 @@ GraphView.prototype = {
     element: null,
     location: null,
     graph: null,
-    socket: null,
+    range: null,
+    width: 800,
 
     init: function() {
-        this.element.html(this.html(this.location.name, this.element.attr('id'), this.getBrowserWidth() - 50));
+        this.width = this.getWidth();
+        this.element.html(this.html(this.location.name, this.element.attr('id'), this.width));
         this.graph = new TempRhGraph(this.element.selector + ' .graph');
         let latest = new Latest(this.element.attr('id') + ' .latestcontainer', this.location.id, socket);
         this.addButton(WEEK, 'Week').trigger('click');
         this.addButton(AVERAGE_MONTH, 'Month');
         this.addButton(YEAR, 'Year');
+        var that = this;
+        socket.on('newData', function( newTimeStamp ) {
+            console.log( newTimeStamp );
+            that.loadRange.call(that);
+        });
+         $(window).resize(function() {
+             let w = that.getWidth();
+             if( w !== that.width ) {
+                 that.width = w;
+                 that.element.children('svg').width(w);
+                 that.graph.redraw();
+             }
+         })
     },
 
     addButton: function(range, name) {
@@ -26,13 +40,20 @@ GraphView.prototype = {
         elem.on('click', function() {
             $(that.element.selector + ' .button').removeClass('selected');
             elem.addClass('selected');
-            that.selectRange.call(that, range);
+            that.loadRange.call(that, range);
         });
         return elem;
     },
 
-    selectRange: function(range) {
+    loadRange: function(range) {
         var end = Math.ceil((new Date().getTime()) / 1000);
+        if(!range) {
+            range = this.range;
+        }
+        if(!range) {
+            return;
+        }
+        this.range = range;
         this.loadData(end - range, end);
     },
 
@@ -58,17 +79,17 @@ GraphView.prototype = {
                 <svg class="graph" width="${width}" height="500"></svg>`
     },
 
-    getBrowserWidth: function() {
+    getWidth: function() {
+        var w = 0;
         if (self.innerWidth) {
-            return self.innerWidth;
+            w = self.innerWidth;
         }
-
-        if (document.documentElement && document.documentElement.clientWidth) {
-            return document.documentElement.clientWidth;
+        else if (document.documentElement && document.documentElement.clientWidth) {
+            w = document.documentElement.clientWidth;
         }
-
-        if (document.body) {
-            return document.body.clientWidth;
+        else if (document.body) {
+            w = document.body.clientWidth;
         }
+        return Math.max(w - 50, 800);
     }
 };

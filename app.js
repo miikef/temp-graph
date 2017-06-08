@@ -84,11 +84,24 @@ function getData(socket, start, end, where, fn) {
     });
     when.all(promises).then(
         function(data) {
+            var maxTemp = maxRH = 0;
+            data[0].forEach(function(e) {
+                if(e.value.maxTemp > maxTemp) {
+                    maxTemp = e.value.maxTemp;
+                }
+                if(e.value.maxRH > maxRH) {
+                    maxRH = e.value.maxRH;
+                }
+                delete e.value.maxRH;
+                delete e.value.maxTemp;
+            });
             fn({
                 data: data,
                 start: start,
                 end: end,
-                location: where
+                location: where,
+                maxRH: maxRH,
+                maxTemp: maxTemp
             });
         },
         function(error) {
