@@ -20,18 +20,18 @@ GraphView.prototype = {
         this.addButton(AVERAGE_MONTH, 'Month');
         this.addButton(YEAR, 'Year');
         var that = this;
-        socket.on('newData', function( newTimeStamp ) {
-            console.log( newTimeStamp );
+        socket.on('newData', function(newTimeStamp) {
             that.loadRange.call(that);
         });
-         $(window).resize(function() {
-             let w = that.getWidth();
-             if( w !== that.width ) {
-                 that.width = w;
-                 that.element.children('svg').width(w);
-                 that.graph.redraw();
-             }
-         })
+        $(window).resize(function() {
+            let w = that.getWidth();
+            if (w !== that.width) {
+                // FIXME: Doesn't work
+                that.width = w;
+                that.element.children('svg').width(w);
+                that.graph.redraw();
+            }
+        })
     },
 
     addButton: function(range, name) {
@@ -47,10 +47,10 @@ GraphView.prototype = {
 
     loadRange: function(range) {
         var end = Math.ceil((new Date().getTime()) / 1000);
-        if(!range) {
+        if (!range) {
             range = this.range;
         }
-        if(!range) {
+        if (!range) {
             return;
         }
         this.range = range;
@@ -63,6 +63,7 @@ GraphView.prototype = {
         this.element.addClass('loading');
         socket.emit('getData', start, end, this.location.id, function(data) {
             that.graph.clear();
+            console.log(data);
             that.setGraphData(data.data[0]);
             that.element.removeClass('loading');
         });
@@ -83,11 +84,9 @@ GraphView.prototype = {
         var w = 0;
         if (self.innerWidth) {
             w = self.innerWidth;
-        }
-        else if (document.documentElement && document.documentElement.clientWidth) {
+        } else if (document.documentElement && document.documentElement.clientWidth) {
             w = document.documentElement.clientWidth;
-        }
-        else if (document.body) {
+        } else if (document.body) {
             w = document.body.clientWidth;
         }
         return Math.max(w - 50, 800);

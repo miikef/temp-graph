@@ -113,17 +113,22 @@ Queries.prototype = {
     _map: function() {
         var min = intervals[0];
         var interval = Math.round((this.date - min) / intervalLength);
+        // Map needs to return all the same values as reduce
         emit(intervals[interval], {
             temp: this.temp,
             rh: this.rh,
             maxRH: this.rh,
             maxTemp: this.temp,
+            minRH: this.rh,
+            maxTemp: this.temp
         });
     },
 
     _reduce: function(key, values) {
         var totalTemp = totalRH = 0;
-        var maxRH = maxTemp = -1;
+        // Number.MAX_SAFE_INTEGER does not work in mongodb
+        var maxRH = maxTemp = -10000;
+        var minRH = minTemp = 10000;
         var noOfTempValues = noOfRHValues = values.length;
         for (var i = 0, len = values.length; i < len; i++) {
             var obj = values[i];
@@ -131,13 +136,19 @@ Queries.prototype = {
                 if (obj.temp > maxTemp) {
                     maxTemp = obj.temp;
                 }
+                if (obj.temp < minTemp) {
+                    minTemp = obj.temp;
+                }
                 totalTemp += obj.temp;
             } else {
                 noOfTempValues--;
             }
             if (obj.rh) {
-                if (obj.rh > maxTemp) {
-                    maxTemp = obj.rh;
+                if (obj.rh > maxRH) {
+                    maxRH = obj.rh;
+                }
+                if (obj.rh < minRH) {
+                    minRH = obj.rh;
                 }
                 totalRH += obj.rh;
             } else {
@@ -147,9 +158,10 @@ Queries.prototype = {
         return {
             temp: Math.round((10 * totalTemp) / noOfTempValues) / 10,
             rh: Math.round((10 * totalRH) / noOfRHValues) / 10,
-            abc: 1,
-            maxRH: maxRH,
-            maxTemp: maxTemp
+            minRH: Math.round(minRH * 10) / 10,
+            maxRH: Math.round(maxRH * 10) / 10,
+            minTemp: Math.round(minTemp * 100) / 100,
+            maxTemp: Math.round(maxTemp * 100) / 100
         };
     },
 

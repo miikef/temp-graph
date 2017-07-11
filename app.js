@@ -84,24 +84,53 @@ function getData(socket, start, end, where, fn) {
     });
     when.all(promises).then(
         function(data) {
-            var maxTemp = maxRH = 0;
+            var maxTemp = maxRH = Number.MIN_SAFE_INTEGER;
+            var minTemp = minRH = Number.MAX_SAFE_INTEGER;
+            var tempSum = rhSum = 0;
+            var validRH = validTemp = data[0].length;
             data[0].forEach(function(e) {
-                if(e.value.maxTemp > maxTemp) {
+
+                // Averages
+                if (e.value.temp) {
+                    tempSum += e.value.temp;
+                } else {
+                    validTemp--;
+                }
+                if (e.value.rh) {
+                    rhSum += e.value.rh;
+                } else {
+                    validRH--;
+                }
+
+                // Max & Min
+                if (e.value.maxTemp > maxTemp) {
                     maxTemp = e.value.maxTemp;
                 }
-                if(e.value.maxRH > maxRH) {
+                if (e.value.maxRH > maxRH) {
                     maxRH = e.value.maxRH;
+                }
+                if (e.value.minTemp < minTemp) {
+                    minTemp = e.value.minTemp;
+                }
+                if (e.value.minRH < minRH) {
+                    minRH = e.value.minRH;
                 }
                 delete e.value.maxRH;
                 delete e.value.maxTemp;
+                delete e.value.minRH;
+                delete e.value.minTemp;
             });
             fn({
                 data: data,
                 start: start,
                 end: end,
                 location: where,
+                avgRH: rhSum / validRH,
+                avgTemp: tempSum / validTemp,
                 maxRH: maxRH,
-                maxTemp: maxTemp
+                maxTemp: maxTemp,
+                minRH: minRH,
+                minTemp: minTemp
             });
         },
         function(error) {
