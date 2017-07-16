@@ -10,12 +10,14 @@ GraphView.prototype = {
     graph: null,
     range: null,
     width: 800,
+    stats: null,
 
     init: function() {
         this.width = this.getWidth();
         this.element.html(this.html(this.location.name, this.element.attr('id'), this.width));
         this.graph = new TempRhGraph(this.element.selector + ' .graph');
         let latest = new Latest(this.element.attr('id') + ' .latestcontainer', this.location.id, socket);
+        this.stats = new Stats(this.element.attr('id') + ' .statscontainer');
         this.addButton(WEEK, 'Week').trigger('click');
         this.addButton(AVERAGE_MONTH, 'Month');
         this.addButton(YEAR, 'Year');
@@ -59,12 +61,13 @@ GraphView.prototype = {
 
     loadData: function(start, end) {
         this.graph.clear();
+        this.stats.clear();
         var that = this;
         this.element.addClass('loading');
         socket.emit('getData', start, end, this.location.id, function(data) {
             that.graph.clear();
-            console.log(data);
             that.setGraphData(data.data[0]);
+            that.stats.setData(data);
             that.element.removeClass('loading');
         });
     },
@@ -76,7 +79,10 @@ GraphView.prototype = {
     html: (name, id, width) => {
         return `<h2>${name}</h2>
                 <div id="rangeselect_${id}" class="rangeselect"></div>
+                <div class="infoboxes">
                 <div class="latestcontainer"></div>
+                <div class="statscontainer"></div>
+                </div>
                 <svg class="graph" width="${width}" height="500"></svg>`
     },
 

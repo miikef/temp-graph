@@ -25,11 +25,11 @@ Latest.prototype = {
             that.dataTime = data.date;
             that.setTime.call(that);
             if (data.rh) {
-                that.element.find('.rh').html(that.toDecimals(data.rh, 1) + '%');
+                that.element.find('.rh').html('<td>' + that.toDecimals(data.rh, 1) + '%</td>');
                 that.element.find('.rh').css('color', that.getColor(data.rh));
             }
             if (data.temp) {
-                that.element.find('.temp').html(that.toDecimals(data.temp, 2) + '&deg;C');
+                that.element.find('.temp').html('<td>' + that.toDecimals(data.temp, 2) + '&deg;C</td>');
             }
             // TODO: Use signal instead to refresh?
             var now = new Date();
@@ -53,15 +53,16 @@ Latest.prototype = {
         } else {
             this.element.find('.datetime').removeClass('olddata');
         }
-        this.element.find('.datetime').html(this.timeSince(this.dataTime * 1000) + ' ago');
+        this.element.find('.datetime').html('<td>' + this.timeSince(this.dataTime * 1000) + ' ago</td>');
     },
 
     html: () => {
-        return `<div class="latest">
-                    <div class="datetime"></div>
-                    <div class="rh"></div>
-                    <div class="temp"></div>
-                </div>`
+        return `<table class="infobox latest">
+                    <tr><th>Current<th></tr>
+                    <tr class="datetime"></tr>
+                    <tr class="rh"></tr>
+                    <tr class="temp"></tr>
+                </tr>`
     },
 
     toDecimals: function(num, decimals) {
